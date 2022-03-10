@@ -72,10 +72,8 @@ class NeuralNetwork(object):
 
 
 def generate_neural_net(algorithm):
-    if algorithm != "a":
-        numInputNodes = 10
-    else:
-        numInputNodes = 8
+    input_node_counts = {"a": 8, "b": 10, "c": 12, "d": 9, "e": 7}
+    numInputNodes = input_node_counts[algorithm]
 
     numHiddenNodes1, numHiddenNodes2, numOutputNodes = 8, 8, 4
     network = NeuralNetwork(numInputNodes, numHiddenNodes1,

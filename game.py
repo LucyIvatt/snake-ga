@@ -178,20 +178,18 @@ class Snake:
             elif self.sense_wall(checked_coord):
                 return distance
 
-    def distance_to_food(self, direction):
-        dir_offsets = {"up": [-1, 0], ("down"): [+1, 0],
-                       ("left"): [0, -1], ("right"): [0, +1]}
+    def manhattan_distance_to_food(self):
+        """ 
+        Return the manhattan distance between points snake head and food
+        """
+        c1 = self.snake[0]
+        c2 = self.food
+        # sum of absolute difference between coordinates
+        distance = 0
+        for c1_i, c2_i in zip(c1, c2):
+            distance += abs(c1_i - c2_i)
 
-        checked_coord = self.snake[0]
-        distance, food_found = 0, False
-        while not food_found:
-            checked_coord = [checked_coord[0]+dir_offsets[direction]
-                             [0], checked_coord[1]+dir_offsets[direction][1]]
-            distance += 1
-            if self.sense_food(checked_coord):
-                return distance
-            elif self.sense_wall(checked_coord):
-                return -1
+        return distance
 
 
 def run_game(display, snake_game, headless, network, algorithm):
@@ -225,15 +223,13 @@ def run_game(display, snake_game, headless, network, algorithm):
                           snake_game.distance_to_obstacle("down"),
                           snake_game.distance_to_obstacle("left"),
                           snake_game.distance_to_obstacle("right"),
-                          snake_game.distance_to_food("up"),
-                          snake_game.distance_to_food("down"),
-                          snake_game.distance_to_food("left"),
-                          snake_game.distance_to_food("right")]
+                          snake_game.manhattan_distance_to_food()]
 
         food_direction = [snake_game.food_direction(
             "x"), snake_game.food_direction("y")]
 
-        food_coordinate = [snake_game.food[0], snake_game.food[1]]
+        food_coordinate = snake_game.food
+        head_coordinate = snake_game.snake[0]
 
         # Gets softmax output of the neural network decision
         if algorithm == "a":
@@ -241,9 +237,11 @@ def run_game(display, snake_game, headless, network, algorithm):
         elif algorithm == "b":
             decision = network.feedForward(local_sensing + food_direction)
         elif algorithm == "c":
-            decision = network.feedForward(local_sensing + food_coordinate)
+            decision = network.feedForward(
+                local_sensing + food_coordinate + head_coordinate)
         elif algorithm == "d":
-            decision = network.feedForward(global_sensing + food_coordinate)
+            decision = network.feedForward(
+                global_sensing + food_coordinate + head_coordinate)
         elif algorithm == "e":
             decision = network.feedForward(global_sensing + food_direction)
 
@@ -279,7 +277,7 @@ def run_game(display, snake_game, headless, network, algorithm):
             display.update_segment_positions(snake_game.snake)
             display.win.update()
 
-            time.sleep(10)     # Change to change update rate of the game
+            time.sleep(0.1)     # Change to change update rate of the game
 
     if not headless:
         turtle.done()
