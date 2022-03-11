@@ -69,6 +69,10 @@ class Snake:
         self.XSIZE = _XSIZE
         self.YSIZE = _YSIZE
         self.reset()
+        self.direction_offsets = {"up": [-1, 0], "down": [+1, 0],
+                                  "left": [0, -1], "right": [0, +1],
+                                  "upright": [-1, +1], "downright": [+1, +1],
+                                  "upleft": [-1, -1], "downleft": [+1, -1]}
 
     def reset(self):
         """Resets the game after a run has finished"""
@@ -122,9 +126,8 @@ class Snake:
     def get_adj_coords(self):
         """Returns dictionary of adjacent coordinates to the snakes head"""
         adj_coords = {}
-        dir_offsets = {"up": [-1, 0], ("down"): [+1, 0],
-                       ("left"): [0, -1], ("right"): [0, +1]}
-        for key, value in dir_offsets.items():
+
+        for key, value in self.direction_offsets.items():
             adj_coords[key] = list(map(sum, zip(self.snake[0], value)))
 
         return adj_coords
@@ -163,33 +166,39 @@ class Snake:
             return 1
         return 0
 
-    def distance_to_obstacle(self, direction):
-        dir_offsets = {"up": [-1, 0], ("down"): [+1, 0],
-                       ("left"): [0, -1], ("right"): [0, +1]}
-
+    def distance_to_tail(self, direction):
         checked_coord = self.snake[0]
-        distance, obstacle_found = 0, False
-        while not obstacle_found:
-            checked_coord = [checked_coord[0]+dir_offsets[direction]
-                             [0], checked_coord[1]+dir_offsets[direction][1]]
-            distance += 1
+        distance, tail_found = 0, False
+        while not tail_found:
+            checked_coord = [checked_coord[0]+self.direction_offsets[direction]
+                             [0], checked_coord[1]+self.direction_offsets[direction][1]]
             if self.sense_tail(checked_coord):
                 return distance
             elif self.sense_wall(checked_coord):
+                return np.inf
+            distance += 1
+
+    def distance_to_wall(self, direction):
+        checked_coord = self.snake[0]
+        distance, wall_not_found = 0, False
+        while not wall_not_found:
+            checked_coord = [checked_coord[0]+self.direction_offsets[direction]
+                             [0], checked_coord[1]+self.direction_offsets[direction][1]]
+            if self.sense_wall(checked_coord):
                 return distance
+            distance += 1
 
-    def manhattan_distance_to_food(self):
-        """ 
-        Return the manhattan distance between points snake head and food
-        """
-        c1 = self.snake[0]
-        c2 = self.food
-        # sum of absolute difference between coordinates
-        distance = 0
-        for c1_i, c2_i in zip(c1, c2):
-            distance += abs(c1_i - c2_i)
-
-        return distance
+    def distance_to_food(self, direction):
+        checked_coord = self.snake[0]
+        distance, wall_not_found = 0, False
+        while not wall_not_found:
+            checked_coord = [checked_coord[0]+self.direction_offsets[direction]
+                             [0], checked_coord[1]+self.direction_offsets[direction][1]]
+            if self.sense_food(checked_coord):
+                return distance
+            elif self.sense_wall(checked_coord):
+                return np.inf
+            distance += 1
 
 
 def run_game(display, snake_game, headless, network, algorithm):
@@ -208,42 +217,82 @@ def run_game(display, snake_game, headless, network, algorithm):
 
     while not game_over:
         steps += 1
-        adj_coords = snake_game.get_adj_coords()
+        adj = snake_game.get_adj_coords()
 
-        local_sensing = [snake_game.obstacle_check(adj_coords["up"]),
-                         snake_game.obstacle_check(adj_coords["down"]),
-                         snake_game.obstacle_check(adj_coords["left"]),
-                         snake_game.obstacle_check(adj_coords["right"]),
-                         snake_game.sense_food(adj_coords["up"]),
-                         snake_game.sense_food(adj_coords["down"]),
-                         snake_game.sense_food(adj_coords["left"]),
-                         snake_game.sense_food(adj_coords["right"])]
+        local_straight = [snake_game.obstacle_check(adj["up"]),
+                          snake_game.obstacle_check(adj["down"]),
+                          snake_game.obstacle_check(adj["left"]),
+                          snake_game.obstacle_check(adj["right"]),
 
-        global_sensing = [snake_game.distance_to_obstacle("up"),
-                          snake_game.distance_to_obstacle("down"),
-                          snake_game.distance_to_obstacle("left"),
-                          snake_game.distance_to_obstacle("right"),
-                          snake_game.manhattan_distance_to_food()]
+                          snake_game.sense_food(adj["up"]),
+                          snake_game.sense_food(adj["down"]),
+                          snake_game.sense_food(adj["left"]),
+                          snake_game.sense_food(adj["right"])]
 
-        food_direction = [snake_game.food_direction(
-            "x"), snake_game.food_direction("y")]
+        local_diagonal = [snake_game.obstacle_check(adj["upleft"]),
+                          snake_game.obstacle_check(adj["downleft"]),
+                          snake_game.obstacle_check(adj["upright"]),
+                          snake_game.obstacle_check(adj["downright"]),
 
-        food_coordinate = snake_game.food
-        head_coordinate = snake_game.snake[0]
+                          snake_game.sense_food(adj["upleft"]),
+                          snake_game.sense_food(adj["downleft"]),
+                          snake_game.sense_food(adj["upright"]),
+                          snake_game.sense_food(adj["downright"])]
+
+        food_direction = [snake_game.food_direction("x"),
+                          snake_game.food_direction("y")]
+
+        global_straight = [snake_game.distance_to_wall("up"),
+                           snake_game.distance_to_wall("down"),
+                           snake_game.distance_to_wall("left"),
+                           snake_game.distance_to_wall("right"),
+
+                           snake_game.distance_to_tail("up"),
+                           snake_game.distance_to_tail("down"),
+                           snake_game.distance_to_tail("left"),
+                           snake_game.distance_to_tail("right"),
+
+                           snake_game.distance_to_food("up"),
+                           snake_game.distance_to_food("down"),
+                           snake_game.distance_to_food("left"),
+                           snake_game.distance_to_food("right"),
+                           ]
+
+        global_diagonal = [snake_game.distance_to_wall("upleft"),
+                           snake_game.distance_to_wall("downleft"),
+                           snake_game.distance_to_wall("upright"),
+                           snake_game.distance_to_wall("downright"),
+
+                           snake_game.distance_to_tail("upleft"),
+                           snake_game.distance_to_tail("downleft"),
+                           snake_game.distance_to_tail("upright"),
+                           snake_game.distance_to_tail("downright"),
+
+                           snake_game.distance_to_food("upleft"),
+                           snake_game.distance_to_food("downleft"),
+                           snake_game.distance_to_food("upright"),
+                           snake_game.distance_to_food("downright"),
+                           ]
 
         # Gets softmax output of the neural network decision
         if algorithm == "a":
-            decision = network.feedForward(local_sensing)
+            decision = network.feedForward(local_straight)
         elif algorithm == "b":
-            decision = network.feedForward(local_sensing + food_direction)
+            decision = network.feedForward(local_straight + food_direction)
         elif algorithm == "c":
-            decision = network.feedForward(
-                local_sensing + food_coordinate + head_coordinate)
+            decision = network.feedForward(local_straight + local_diagonal)
         elif algorithm == "d":
             decision = network.feedForward(
-                global_sensing + food_coordinate + head_coordinate)
+                local_straight + local_diagonal + food_direction)
         elif algorithm == "e":
-            decision = network.feedForward(global_sensing + food_direction)
+            decision = network.feedForward(global_straight)
+        elif algorithm == "f":
+            decision = network.feedForward(global_straight + food_direction)
+        elif algorithm == "g":
+            decision = network.feedForward(global_straight + global_diagonal)
+        elif algorithm == "h":
+            decision = network.feedForward(
+                global_straight + global_diagonal + food_direction)
 
         # Converts softmax output to output direction and sets it
         directions = ["up", "down", "left", "right"]

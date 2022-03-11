@@ -72,7 +72,8 @@ class NeuralNetwork(object):
 
 
 def generate_neural_net(algorithm):
-    input_node_counts = {"a": 8, "b": 10, "c": 12, "d": 9, "e": 7}
+    input_node_counts = {"a": 8, "b": 10, "c": 16,
+                         "d": 18, "e": 12, "f": 14, "g": 24, "h": 26}
     numInputNodes = input_node_counts[algorithm]
 
     numHiddenNodes1, numHiddenNodes2, numOutputNodes = 8, 8, 4
