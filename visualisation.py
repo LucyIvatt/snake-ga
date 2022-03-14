@@ -88,7 +88,7 @@ def plot_experiment(exp, exp_type, plot_std=False):
         suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different neural network inputs on \
             fitness over 150 generations"
     elif exp == Experiment.FINAL_ALGORITHM:
-        suptitle = "Final algorithm's fitnessees over 250 generations"
+        suptitle = "Final algorithm's fitnessees over 200 generations"
 
     fig.suptitle(suptitle)
 
