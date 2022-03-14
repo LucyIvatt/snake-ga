@@ -103,7 +103,10 @@ def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=
 
 
 def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx, exp_type, algorithm):
-    root_folder = "sim-outputs//" + exp_type + "-experiment"
+    if exp_type == "final-algorithm":
+        root_folder = "sim-outputs//final-algorithm"
+    else:
+        root_folder = "sim-outputs//" + exp_type + "-experiment"
     if not os.path.exists(root_folder):
         os.makedirs(root_folder)
 
@@ -113,6 +116,8 @@ def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx,
     elif "input" in exp_type:
         parent_folder = root_folder + "//" + "gens-" + \
             str(gen_num) + "-pop-" + str(pop_num) + "-algorithm-" + algorithm
+    elif exp_type == "final-algorithm":
+        parent_folder = root_folder
 
     if not os.path.exists(parent_folder):
         os.makedirs(parent_folder)
@@ -127,15 +132,17 @@ def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx,
             run_num += 1
 
     # Saves label for run
-    label_file = open(run_folder + "//" + "label" + ".pkl", "wb")
+    if not exp_type == "final-algorithm":
+        label_file = open(run_folder + "//" + "label" + ".pkl", "wb")
+
+        if "cx-indpb" in exp_type:
+            pickle.dump("indpb-" + "{:.3f}".format(indpb) +
+                        "-cxprob-" + "{:.3f}".format(cx), label_file)
+        elif "input" in exp_type:
+            pickle.dump("algorithm-" + algorithm, label_file)
+
     lb_file = open(run_folder + "//" + "logbook" + ".pkl", "wb")
     pop_file = open(run_folder + "//" + "final_population" + ".pkl", "wb")
-
-    if "cx-indpb" in exp_type:
-        pickle.dump("indpb-" + "{:.3f}".format(indpb) +
-                    "-cxprob-" + "{:.3f}".format(cx), label_file)
-    elif "input" in exp_type:
-        pickle.dump("algorithm-" + algorithm, label_file)
 
     pickle.dump(logbook, lb_file)
     pickle.dump(final_population, pop_file)

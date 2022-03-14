@@ -11,8 +11,8 @@ def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp
     for i in range(len(data)):
         if experiment_type == "cx-indpb-final":
             colour = "#9701FF" if i == 1 else "#00C5FF"
-        # elif experiment_type == "input-final":
-        #     # TODO: Add colour change here for best two algorithms
+        elif experiment_type == "input-final":
+            colour = "#20FF00" if i == 1 else "#FF8400"
         else:
             colour = colour_map(1.*data.index(data[i])/len(data))
 
@@ -36,8 +36,8 @@ def box_plot(ax, input, colour_map, experiment_type):
     for i, plot in enumerate(box_plots['boxes']):
         if experiment_type == "cx-indpb-final":
             colour = "#9701FF" if i == 1 else "#00C5FF"
-        # elif experiment_type == "input-final":
-        #     # TODO: Add colour change here for best two algorithms
+        elif experiment_type == "input-final":
+            colour = "#20FF00" if i == 1 else "#FF8400"
         else:
             colour = colour_map(1.*data.index(data[i])/len(data))
 
@@ -162,3 +162,53 @@ def plot_input_experiment(type, plot_std=False):
              plt.get_cmap("gist_rainbow"), "input-" + type,)
 
     plt.savefig(save_location + f"//input-{type}-experiment.png")
+
+
+def plot_final_algorithm(plot_std=False):
+    iteration_num = 15
+
+    fig, ax1, ax2, ax3 = initialise_graphs()
+
+    fig.suptitle(
+        f"Final Algorithms fitness values over 250 generations", fontsize=22)
+    save_location = f"sim-outputs//final-algorithm"
+
+    averaged_means, averaged_maxes, averaged_stds = ([] for _ in range(3))
+    final_generation_averages = []
+
+    pairing_folders = [folder for folder in os.listdir(
+        save_location) if os.path.isdir(save_location + "//" + folder)]
+    for prob_pairing in pairing_folders:
+        iterations = load_simulation_info(save_location + "//" + prob_pairing)
+
+        logbooks = [run[1] for run in iterations]
+
+        means, maxes, stds = ([] for _ in range(3))
+        final_averages = []
+
+        for logbook in logbooks:
+            means.append(logbook.select("mean"))
+            maxes.append(logbook.select("max"))
+            stds.append(logbook.select("std"))
+            final_averages.append(logbook.select("mean")[-1])
+
+        label = iterations[0][0]
+        averaged_means.append((label, np.mean(means, axis=0)))
+        averaged_maxes.append((label, np.mean(maxes, axis=0)))
+        averaged_stds.append((label, np.mean(stds, axis=0)))
+        final_generation_averages.append((label, final_averages))
+
+    ax1.title.set_text("Mean fitness over all generations")
+    graph_plot(ax1, logbooks[0].select("gen"), averaged_means, plt.get_cmap(
+        "gist_rainbow"), "mean", iteration_num, "cx-indpb-" + type, plot_std, averaged_stds)
+
+    ax2.title.set_text("Max fitness over all generations")
+    graph_plot(ax2, logbooks[0].select("gen"), averaged_maxes, plt.get_cmap(
+        "gist_rainbow"), "max", iteration_num, "cx-indpb-" + type,)
+
+    ax3.title.set_text(
+        "Distribution of average fitness in the final generation for each iteration")
+    box_plot(ax3, final_generation_averages, plt.get_cmap(
+        "gist_rainbow"), "cx-indpb-" + type,)
+
+    plt.savefig(save_location + f"//cx-indpb-{type}-experiment.png")
