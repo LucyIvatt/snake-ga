@@ -131,18 +131,18 @@ def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx,
         else:
             run_num += 1
 
-    # Saves label for run
-    if not exp_type == "final-algorithm":
-        label_file = open(run_folder + "//" + "label" + ".pkl", "wb")
-
-        if "cx-indpb" in exp_type:
-            pickle.dump("indpb-" + "{:.3f}".format(indpb) +
-                        "-cxprob-" + "{:.3f}".format(cx), label_file)
-        elif "input" in exp_type:
-            pickle.dump("algorithm-" + algorithm, label_file)
-
+    # saves label for graphs
+    label_file = open(run_folder + "//" + "label" + ".pkl", "wb")
     lb_file = open(run_folder + "//" + "logbook" + ".pkl", "wb")
     pop_file = open(run_folder + "//" + "final_population" + ".pkl", "wb")
+
+    if "cx-indpb" in exp_type:
+        pickle.dump("indpb-" + "{:.3f}".format(indpb) +
+                    "-cxprob-" + "{:.3f}".format(cx), label_file)
+    elif "input" in exp_type:
+        pickle.dump("algorithm-" + algorithm, label_file)
+    elif "final-algorithm" in exp_type:
+        pickle.dump("algorithm-b", label_file)
 
     pickle.dump(logbook, lb_file)
     pickle.dump(final_population, pop_file)
