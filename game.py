@@ -219,60 +219,89 @@ def run_game(display, snake_game, headless, network, algorithm):
         steps += 1
         adj = snake_game.get_adj_coords()
 
-        local_straight = [snake_game.obstacle_check(adj["up"]),
-                          snake_game.obstacle_check(adj["down"]),
-                          snake_game.obstacle_check(adj["left"]),
-                          snake_game.obstacle_check(adj["right"]),
+        straight_directions = ["up", "down", "left", "right"]
+        diagonal_directions = ["upleft", "downleft", "upright", "downright"]
 
-                          snake_game.sense_food(adj["up"]),
-                          snake_game.sense_food(adj["down"]),
-                          snake_game.sense_food(adj["left"]),
-                          snake_game.sense_food(adj["right"])]
+        local_straight_old = [snake_game.obstacle_check(adj["up"]),
+                              snake_game.obstacle_check(adj["down"]),
+                              snake_game.obstacle_check(adj["left"]),
+                              snake_game.obstacle_check(adj["right"]),
 
-        local_diagonal = [snake_game.obstacle_check(adj["upleft"]),
-                          snake_game.obstacle_check(adj["downleft"]),
-                          snake_game.obstacle_check(adj["upright"]),
-                          snake_game.obstacle_check(adj["downright"]),
+                              snake_game.sense_food(adj["up"]),
+                              snake_game.sense_food(adj["down"]),
+                              snake_game.sense_food(adj["left"]),
+                              snake_game.sense_food(adj["right"])]
 
-                          snake_game.sense_food(adj["upleft"]),
-                          snake_game.sense_food(adj["downleft"]),
-                          snake_game.sense_food(adj["upright"]),
-                          snake_game.sense_food(adj["downright"])]
+        local_straight = [snake_game.obstacle_check(adj[direction]) for direction in straight_directions] + [
+            snake_game.sense_food(adj[direction]) for direction in straight_directions]
+
+        if not local_straight_old == local_straight:
+            print("INCORRECT FOR LOCAL STRAIGHT")
+            return
+
+        local_diagonal_old = [snake_game.obstacle_check(adj["upleft"]),
+                              snake_game.obstacle_check(adj["downleft"]),
+                              snake_game.obstacle_check(adj["upright"]),
+                              snake_game.obstacle_check(adj["downright"]),
+
+                              snake_game.sense_food(adj["upleft"]),
+                              snake_game.sense_food(adj["downleft"]),
+                              snake_game.sense_food(adj["upright"]),
+                              snake_game.sense_food(adj["downright"])]
+
+        local_diagonal = [snake_game.obstacle_check(adj[direction]) for direction in diagonal_directions] + [
+            snake_game.sense_food(adj[direction]) for direction in diagonal_directions]
+
+        if not local_diagonal_old == local_diagonal:
+            print("INCORRECT FOR LOCAL DIAGONAL")
+            return
 
         food_direction = [snake_game.food_direction("x"),
                           snake_game.food_direction("y")]
 
-        global_straight = [snake_game.distance_to_wall("up"),
-                           snake_game.distance_to_wall("down"),
-                           snake_game.distance_to_wall("left"),
-                           snake_game.distance_to_wall("right"),
+        global_straight = [snake_game.distance_to_wall(direction) for direction in straight_directions] + [snake_game.distance_to_tail(
+            direction) for direction in straight_directions] + [snake_game.distance_to_food(direction) for direction in straight_directions]
 
-                           snake_game.distance_to_tail("up"),
-                           snake_game.distance_to_tail("down"),
-                           snake_game.distance_to_tail("left"),
-                           snake_game.distance_to_tail("right"),
+        global_diagonal = [snake_game.distance_to_wall(direction) for direction in diagonal_directions] + [snake_game.distance_to_tail(direction) for direction in diagonal_directions] + [snake_game.distance_to_food(direction)
+                                                                                                                                                                                           for direction in diagonal_directions]
 
-                           snake_game.distance_to_food("up"),
-                           snake_game.distance_to_food("down"),
-                           snake_game.distance_to_food("left"),
-                           snake_game.distance_to_food("right"),
-                           ]
+        global_straight_old = [snake_game.distance_to_wall("up"),
+                               snake_game.distance_to_wall("down"),
+                               snake_game.distance_to_wall("left"),
+                               snake_game.distance_to_wall("right"),
 
-        global_diagonal = [snake_game.distance_to_wall("upleft"),
-                           snake_game.distance_to_wall("downleft"),
-                           snake_game.distance_to_wall("upright"),
-                           snake_game.distance_to_wall("downright"),
+                               snake_game.distance_to_tail("up"),
+                               snake_game.distance_to_tail("down"),
+                               snake_game.distance_to_tail("left"),
+                               snake_game.distance_to_tail("right"),
 
-                           snake_game.distance_to_tail("upleft"),
-                           snake_game.distance_to_tail("downleft"),
-                           snake_game.distance_to_tail("upright"),
-                           snake_game.distance_to_tail("downright"),
+                               snake_game.distance_to_food("up"),
+                               snake_game.distance_to_food("down"),
+                               snake_game.distance_to_food("left"),
+                               snake_game.distance_to_food("right"),
+                               ]
+        if not global_straight_old == global_straight:
+            print("INCORRECT FOR global straight")
+            return
 
-                           snake_game.distance_to_food("upleft"),
-                           snake_game.distance_to_food("downleft"),
-                           snake_game.distance_to_food("upright"),
-                           snake_game.distance_to_food("downright"),
-                           ]
+        global_diagonal_old = [snake_game.distance_to_wall("upleft"),
+                               snake_game.distance_to_wall("downleft"),
+                               snake_game.distance_to_wall("upright"),
+                               snake_game.distance_to_wall("downright"),
+
+                               snake_game.distance_to_tail("upleft"),
+                               snake_game.distance_to_tail("downleft"),
+                               snake_game.distance_to_tail("upright"),
+                               snake_game.distance_to_tail("downright"),
+
+                               snake_game.distance_to_food("upleft"),
+                               snake_game.distance_to_food("downleft"),
+                               snake_game.distance_to_food("upright"),
+                               snake_game.distance_to_food("downright"),
+                               ]
+        if not global_diagonal_old == global_diagonal:
+            print("INCORRECT FOR global diagonal")
+            return
 
         # Gets softmax output of the neural network decision
         if algorithm == "a":

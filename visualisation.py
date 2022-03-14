@@ -1,19 +1,20 @@
 import matplotlib.pyplot as plt
 import os
+from enums import Experiment, ExperimentType
 from genetic import load_simulation_info
 import numpy as np
 
 
-def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, experiment_type, plot_std=False, stds=None):
+def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp, exp_type, plot_std=False, stds=None):
     ax.set_xlabel('Generations')
     ax.set_ylabel('Average of ' + graph_type.capitalize() +
                   ' Fitness over ' + str(iteration_num) + ' iterations')
     for i in range(len(data)):
-        if experiment_type == "cx-indpb-final":
+        if exp == Experiment.CXINDPB and exp_type == ExperimentType.FINAL:
             colour = "#9701FF" if i == 1 else "#00C5FF"
-        elif experiment_type == "input-final":
-            colour = "#20FF00" if i == 1 else "#FF8400"
-        elif experiment_type == "final-algorithm":
+        elif exp == Experiment.INPUT and exp_type == ExperimentType.FINAL:
+            colour = "#20FF00" if i == 1 else "#FFAD54"
+        elif exp == Experiment.FINAL_ALGORITHM:
             colour = "#557FFF"
         else:
             colour = colour_map(1.*data.index(data[i])/len(data))
@@ -27,7 +28,7 @@ def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp
     ax.legend(loc='best', fancybox=True, framealpha=0.5)
 
 
-def box_plot(ax, input, colour_map, experiment_type):
+def box_plot(ax, input, colour_map, exp, exp_type):
     labels = [algorithm[0] for algorithm in input]
     data = [algorithm[1] for algorithm in input]
     ax.set_xlabel('Algorithm Parameters')
@@ -36,11 +37,11 @@ def box_plot(ax, input, colour_map, experiment_type):
     box_plots = ax.boxplot(data, patch_artist=True, labels=labels)
 
     for i, plot in enumerate(box_plots['boxes']):
-        if experiment_type == "cx-indpb-final":
+        if exp == Experiment.CXINDPB and exp_type == ExperimentType.FINAL:
             colour = "#9701FF" if i == 1 else "#00C5FF"
-        elif experiment_type == "input-final":
-            colour = "#20FF00" if i == 1 else "#FF8400"
-        elif experiment_type == "final-algorithm":
+        elif exp == Experiment.INPUT and exp_type == ExperimentType.FINAL:
+            colour = "#20FF00" if i == 1 else "#FFAD54"
+        elif exp == Experiment.FINAL_ALGORITHM:
             colour = "#557FFF"
         else:
             colour = colour_map(1.*data.index(data[i])/len(data))
@@ -50,10 +51,6 @@ def box_plot(ax, input, colour_map, experiment_type):
 
 def initialise_graphs():
     fig = plt.figure(figsize=(14, 10), dpi=80)
-    # gs = fig.add_gridspec(2, 2)
-    # ax1 = fig.add_subplot(gs[0, 0])
-    # ax2 = fig.add_subplot(gs[0, 1])
-    # ax3 = fig.add_subplot(gs[1, :])
     ax1 = plt.subplot(221)
     ax2 = plt.subplot(222, sharey=ax1)
     ax3 = plt.subplot(212)
@@ -64,25 +61,45 @@ def initialise_graphs():
     return fig, ax1, ax2, ax3
 
 
-def plot_cxindpb_experiment(type, plot_std=False):
-    if type == "final":
-        iteration_num = 15
-    elif type == "exploration":
+def plot_experiment(exp, exp_type, plot_std=False):
+    if exp_type == ExperimentType.EXPLORATION:
         iteration_num = 5
+    elif exp_type == ExperimentType.FINAL:
+        iteration_num = 15
+    elif exp_type == ExperimentType.FINAL_ALGORITHM:
+        iteration_num = 20
 
     fig, ax1, ax2, ax3 = initialise_graphs()
 
-    fig.suptitle(
-        f"{type.capitalize()} experiment showing the effect of different mutation and crossover probabilities on fitness over 150 generations", fontsize=22)
-    save_location = f"sim-outputs//cx-indpb-{type}-experiment"
+    if exp == Experiment.CXINDPB:
+        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different mutation and crossover probabilities on fitness over 150 generations"
+    elif exp == Experiment.INPUT:
+        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different neural network inputs on fitness over 150 generations"
+    elif exp == Experiment.FINAL_ALGORITHM:
+        suptitle = "Final algorithm's fitnessees over 250 generations"
+
+    fig.suptitle(suptitle)
+
+    if exp != Experiment.FINAL_ALGORITHM:
+        save_location = f"sim-outputs//{exp.value}-{exp_type.value}-experiment"
+    else:
+        save_location = f"sim-outputs//{exp.value}"
 
     averaged_means, averaged_maxes, averaged_stds = ([] for _ in range(3))
     final_generation_averages = []
 
-    pairing_folders = [folder for folder in os.listdir(
-        save_location) if os.path.isdir(save_location + "//" + folder)]
-    for prob_pairing in pairing_folders:
-        iterations = load_simulation_info(save_location + "//" + prob_pairing)
+    if exp != Experiment.FINAL_ALGORITHM:
+        alterations = [folder for folder in os.listdir(
+            save_location) if os.path.isdir(save_location + "//" + folder)]
+    else:
+        alterations = range(1)
+
+    for alteration in alterations:
+        if exp != Experiment.FINAL_ALGORITHM:
+            iterations = load_simulation_info(
+                save_location + "//" + alteration)
+        else:
+            iterations = load_simulation_info(save_location)
 
         logbooks = [run[1] for run in iterations]
 
@@ -103,116 +120,19 @@ def plot_cxindpb_experiment(type, plot_std=False):
 
     ax1.title.set_text("Mean fitness over all generations")
     graph_plot(ax1, logbooks[0].select("gen"), averaged_means, plt.get_cmap(
-        "gist_rainbow"), "mean", iteration_num, "cx-indpb-" + type, plot_std, averaged_stds)
+        "gist_rainbow"), "mean", iteration_num, exp, exp_type, plot_std, averaged_stds)
 
     ax2.title.set_text("Max fitness over all generations")
     graph_plot(ax2, logbooks[0].select("gen"), averaged_maxes, plt.get_cmap(
-        "gist_rainbow"), "max", iteration_num, "cx-indpb-" + type,)
-
-    ax3.title.set_text(
-        "Distribution of the average fitness values from the final generation of each iteration")
-    box_plot(ax3, final_generation_averages, plt.get_cmap(
-        "gist_rainbow"), "cx-indpb-" + type,)
-
-    plt.savefig(save_location + f"//cx-indpb-{type}-experiment.png")
-
-
-def plot_input_experiment(type, plot_std=False):
-    if type == "exploration":
-        iteration_num = 5
-    elif type == "final":
-        iteration_num = 15
-
-    fig, ax1, ax2, ax3 = initialise_graphs()
-
-    fig.suptitle(
-        f"{type.capitalize()} experiment showing the effect of different neural network inputs on fitness over 150 generations", fontsize=22)
-    save_location = f"sim-outputs//input-{type}-experiment"
-
-    averaged_means, averaged_maxes, averaged_stds = ([] for _ in range(3))
-    final_generation_averages = []
-
-    pairing_folders = [folder for folder in os.listdir(
-        save_location) if os.path.isdir(save_location + "//" + folder)]
-    for prob_pairing in pairing_folders:
-        iterations = load_simulation_info(
-            save_location + "//" + prob_pairing)
-
-        logbooks = [run[1] for run in iterations]
-
-        means, maxes, stds = ([] for _ in range(3))
-        final_averages = []
-
-        for logbook in logbooks:
-            means.append(logbook.select("mean"))
-            maxes.append(logbook.select("max"))
-            stds.append(logbook.select("std"))
-            final_averages.append(logbook.select("mean")[-1])
-
-        label = iterations[0][0]
-        averaged_means.append((label, np.mean(means, axis=0)))
-        averaged_maxes.append((label, np.mean(maxes, axis=0)))
-        averaged_stds.append((label, np.mean(stds, axis=0)))
-        final_generation_averages.append((label, final_averages))
-
-    ax1.title.set_text("Mean fitness over all generations")
-    graph_plot(ax1, logbooks[0].select("gen"), averaged_means, plt.get_cmap(
-        "gist_rainbow"), "mean", iteration_num, "input-" + type, plot_std, averaged_stds)
-
-    ax2.title.set_text("Max fitness over all generations")
-    graph_plot(ax2, logbooks[0].select("gen"), averaged_maxes, plt.get_cmap(
-        "gist_rainbow"), "max", iteration_num, "input-" + type,)
+        "gist_rainbow"), "max", iteration_num, exp, exp_type)
 
     ax3.title.set_text(
         "Distribution of the average fitness values from the final generation of each iteration")
     box_plot(ax3, final_generation_averages,
-             plt.get_cmap("gist_rainbow"), "input-" + type,)
+             plt.get_cmap("gist_rainbow"), exp, exp_type)
 
-    plt.savefig(save_location + f"//input-{type}-experiment.png")
-
-
-def plot_final_algorithm(plot_std=False):
-    iteration_num = 15
-
-    fig, ax1, ax2, ax3 = initialise_graphs()
-
-    fig.suptitle(
-        f"Final algorithms effect on fitness values over 250 generations", fontsize=22)
-    save_location = f"sim-outputs//final-algorithm"
-
-    averaged_means, averaged_maxes, averaged_stds = ([] for _ in range(3))
-    final_generation_averages = []
-
-    iterations = load_simulation_info(save_location)
-
-    logbooks = [run[1] for run in iterations]
-
-    means, maxes, stds = ([] for _ in range(3))
-    final_averages = []
-
-    for logbook in logbooks:
-        means.append(logbook.select("mean"))
-        maxes.append(logbook.select("max"))
-        stds.append(logbook.select("std"))
-        final_averages.append(logbook.select("mean")[-1])
-
-    label = iterations[0][0]
-    averaged_means.append((label, np.mean(means, axis=0)))
-    averaged_maxes.append((label, np.mean(maxes, axis=0)))
-    averaged_stds.append((label, np.mean(stds, axis=0)))
-    final_generation_averages.append((label, final_averages))
-
-    ax1.title.set_text("Mean fitness over all generations")
-    graph_plot(ax1, logbooks[0].select("gen"), averaged_means, plt.get_cmap(
-        "gist_rainbow"), "mean", iteration_num, "final-algorithm", plot_std, averaged_stds)
-
-    ax2.title.set_text("Max fitness over all generations")
-    graph_plot(ax2, logbooks[0].select("gen"), averaged_maxes, plt.get_cmap(
-        "gist_rainbow"), "max", iteration_num, "final-algorithm",)
-
-    ax3.title.set_text(
-        "Distribution of the average fitness values from the final generation of each iteration")
-    box_plot(ax3, final_generation_averages, plt.get_cmap(
-        "gist_rainbow"), "final-algorithm")
-
-    plt.savefig(save_location + f"//final-algorithm.png")
+    if exp != Experiment.FINAL_ALGORITHM:
+        plt.savefig(save_location +
+                    f"//{exp.value}-{exp_type.value}-graphs.png")
+    else:
+        plt.savefig(save_location + f"//{exp.value}-graphs.png")

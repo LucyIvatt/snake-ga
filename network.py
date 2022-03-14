@@ -72,14 +72,18 @@ class NeuralNetwork(object):
 
 
 def generate_neural_net(algorithm):
+    '''Creates the neural network with the correct amount of inputs depending on the algorithm variant'''
     input_node_counts = {"a": 8, "b": 10, "c": 16,
                          "d": 18, "e": 12, "f": 14, "g": 24, "h": 26}
-    numInputNodes = input_node_counts[algorithm]
+    num_i = input_node_counts[algorithm]
 
-    numHiddenNodes1, numHiddenNodes2, numOutputNodes = 8, 8, 4
-    network = NeuralNetwork(numInputNodes, numHiddenNodes1,
-                            numHiddenNodes2, numOutputNodes)
-    # Calculates the size of the individual using input, output and hidden layer neuron counts (accounting for bias nodes for hidden layers)
-    ind_size = ((numInputNodes+1) * numHiddenNodes1) + ((numHiddenNodes1+1)
-                                                        * numHiddenNodes2) + (numHiddenNodes2 * numOutputNodes)
+    num_h1, num_h2, num_o = 8, 8, 4
+    network = NeuralNetwork(num_i, num_h1, num_h2, num_o)
+
+    ind_size = calculate_ind_size(num_i, num_h1, num_h2, num_o)
     return ind_size, network
+
+
+def calculate_ind_size(num_i, num_h1, num_h2, num_o):
+    '''Calculates the size of the individual depending on the number of nodes in the network'''
+    return ((num_i+1) * num_h1) + ((num_h1+1) * num_h2) + (num_h2 * num_o)

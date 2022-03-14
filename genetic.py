@@ -1,3 +1,4 @@
+from enums import Experiment, ExperimentType
 from game import run_game
 from deap import base
 from deap import creator
@@ -18,7 +19,8 @@ def evaluate(individual, network, snake_game, algorithm, display, headless):
     return score,
 
 
-def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=150, pop_num=1500, mut_prob=0.021, cx_prob=0.15, exp_type="test", algorithm="b"):
+def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=150, pop_num=1500, mut_prob=0.021, cx_prob=0.15,
+                      exp=Experiment.TEST, exp_type=ExperimentType.FINAL, algorithm="b"):
     # Creates single objective maximizing fitness named FitnessMax
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
@@ -97,26 +99,28 @@ def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=
         logbook.record(gen=g, **record)
 
     save_simulation_info(logbook, population, gen_num,
-                         pop_num, mut_prob, cx_prob, exp_type, algorithm)
+                         pop_num, mut_prob, cx_prob, exp, exp_type, algorithm)
 
     return logbook, population
 
 
-def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx, exp_type, algorithm):
-    if exp_type == "final-algorithm":
+def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx, exp, exp_type, algorithm):
+    if exp == Experiment.FINAL_ALGORITHM:
         root_folder = "sim-outputs//final-algorithm"
+    elif exp == Experiment.TEST:
+        root_folder = "sim-outputs//tests"
     else:
-        root_folder = "sim-outputs//" + exp_type + "-experiment"
+        root_folder = "sim-outputs//" + exp.value + "-" + exp_type.value + "-experiment"
     if not os.path.exists(root_folder):
         os.makedirs(root_folder)
 
-    if "cx-indpb" in exp_type:
+    if exp == Experiment.CXINDPB:
         parent_folder = root_folder + "//" + "gens-" + str(gen_num) + "-pop-" + str(
             pop_num) + "-mutprob-" + "{:.3f}".format(indpb) + "-cxprob-" + "{:.3f}".format(cx)
-    elif "input" in exp_type:
+    elif exp == Experiment.INPUT:
         parent_folder = root_folder + "//" + "gens-" + \
             str(gen_num) + "-pop-" + str(pop_num) + "-algorithm-" + algorithm
-    elif exp_type == "final-algorithm":
+    elif exp == Experiment.FINAL_ALGORITHM or exp == Experiment.TEST:
         parent_folder = root_folder
 
     if not os.path.exists(parent_folder):
@@ -136,13 +140,16 @@ def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx,
     lb_file = open(run_folder + "//" + "logbook" + ".pkl", "wb")
     pop_file = open(run_folder + "//" + "final_population" + ".pkl", "wb")
 
-    if "cx-indpb" in exp_type:
+    if exp == Experiment.CXINDPB:
         pickle.dump("indpb-" + "{:.3f}".format(indpb) +
                     "-cxprob-" + "{:.3f}".format(cx), label_file)
-    elif "input" in exp_type:
+    elif exp == Experiment.INPUT:
         pickle.dump("algorithm-" + algorithm, label_file)
-    elif "final-algorithm" in exp_type:
+    elif exp == Experiment.FINAL_ALGORITHM:
         pickle.dump("algorithm-b", label_file)
+    elif exp == Experiment.TEST:
+        pickle.dump("algorithm-" + algorithm + "-indpb-" + "{:.3f}".format(indpb) +
+                    "-cxprob-" + "{:.3f}".format(cx), label_file)
 
     pickle.dump(logbook, lb_file)
     pickle.dump(final_population, pop_file)
