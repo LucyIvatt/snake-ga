@@ -8,7 +8,8 @@ class DisplayGame:
     """Class for displaying the game when HEADLESS is set to False"""
 
     def __init__(self, XSIZE, YSIZE):
-        """Initializes all aspects of the game including the board, snake and food pellets."""
+        """Initializes all aspects of the game including the board, snake and 
+            food pellets."""
         # SCREEN
         self.win = turtle.Screen()
         self.win.title("EVAC Snake game")
@@ -76,15 +77,15 @@ class Snake:
 
     def reset(self):
         """Resets the game after a run has finished"""
-        self.snake = [[8, 10], [8, 9], [8, 8], [8, 7], [8, 6], [8, 5], [8, 4], [
-            8, 3], [8, 2], [8, 1], [8, 0]]  # Initial snake co-ordinates [ypos,xpos]
+        self.snake = [[8, 10], [8, 9], [8, 8], [8, 7], [8, 6], [8, 5], [8, 4],  # Initial snake co-ordinates [ypos,xpos]
+                      [8, 3], [8, 2], [8, 1], [8, 0]]
         self.food = self.place_food()
         self.snake_direction = "right"
-        # TODO: 1. Check if this modification is allowed
         self.time_until_starve = self.XSIZE * self.YSIZE * 1.5
 
     def place_food(self):
-        """Randomly generates a location for the food, and regenerates it if spawned inside the snake"""
+        """Randomly generates a location for the food, and regenerates it if 
+            spawned inside the snake"""
         self.food = [random.randint(1, (self.YSIZE-2)),
                      random.randint(1, (self.XSIZE-2))]
         while (self.food in self.snake):
@@ -94,12 +95,15 @@ class Snake:
 
     def update_snake_position(self):
         """Adds the new coordinate of the snakes head to the front of the snake coordinate list."""
-        self.snake.insert(0, [self.snake[0][0] + (self.snake_direction == "down" and 1) + (self.snake_direction == "up" and -1),
-                          self.snake[0][1] + (self.snake_direction == "left" and -1) + (self.snake_direction == "right" and 1)])
+        self.snake.insert(0, [self.snake[0][0] + (self.snake_direction == "down" and 1) +
+                              (self.snake_direction == "up" and -1),
+                              self.snake[0][1] + (self.snake_direction == "left" and -1) +
+                              (self.snake_direction == "right" and 1)])
 
     def food_eaten(self):
-        """Returns True if snakes head coordinate is the same as the food location, otherwise removes the oldest coordinate 
-            in the snake coordinate list (as a new one will be added for the movement of the head) and returns False."""
+        """Returns True if snakes head coordinate is the same as the food location, otherwise removes the oldest 
+            coordinate in the snake coordinate list (as a new one will be added for the movement of the head) 
+                and returns False."""
         if self.snake[0] == self.food:
             self.time_until_starve = self.XSIZE * self.YSIZE * 1.5
             return True
@@ -117,7 +121,8 @@ class Snake:
 
     def snake_hit_wall(self):
         """Returns True if new snakes head coordinate goes out of bounds, otherwise False"""
-        if self.snake[0][0] == 0 or self.snake[0][0] == (self.YSIZE-1) or self.snake[0][1] == 0 or self.snake[0][1] == (self.XSIZE-1):
+        if self.snake[0][0] == 0 or self.snake[0][0] == (self.YSIZE-1) or self.snake[0][1] == 0 or \
+                self.snake[0][1] == (self.XSIZE-1):
             return True
         else:
             return False
@@ -167,6 +172,8 @@ class Snake:
         return 0
 
     def distance_to_tail(self, direction):
+        """Returns the shortest distance in a given direction to the snakes tail, returns infinity if tail not in 
+            the direction."""
         checked_coord = self.snake[0]
         distance, tail_found = 0, False
         while not tail_found:
@@ -179,6 +186,7 @@ class Snake:
             distance += 1
 
     def distance_to_wall(self, direction):
+        """Returns the distance to the wall in a given direction"""
         checked_coord = self.snake[0]
         distance, wall_not_found = 0, False
         while not wall_not_found:
@@ -189,6 +197,8 @@ class Snake:
             distance += 1
 
     def distance_to_food(self, direction):
+        """Returns the shortest distance in a given direction to the food, returns infinity if food not in the 
+            direction."""
         checked_coord = self.snake[0]
         distance, wall_not_found = 0, False
         while not wall_not_found:
@@ -202,7 +212,7 @@ class Snake:
 
 
 def run_game(display, snake_game, headless, network, algorithm):
-    '''Runs through a game simulation, using the neural network to make decisions on the snakes movement. 
+    '''Runs through a game simulation, using the neural network to make decisions on the snakes movement.
         Returns the final score the snake achieved before a loss condition was met.'''
 
     # Resets the score, game & display
@@ -222,86 +232,25 @@ def run_game(display, snake_game, headless, network, algorithm):
         straight_directions = ["up", "down", "left", "right"]
         diagonal_directions = ["upleft", "downleft", "upright", "downright"]
 
-        local_straight_old = [snake_game.obstacle_check(adj["up"]),
-                              snake_game.obstacle_check(adj["down"]),
-                              snake_game.obstacle_check(adj["left"]),
-                              snake_game.obstacle_check(adj["right"]),
+        local_straight = [snake_game.obstacle_check(adj[dir]) for dir in straight_directions] + \
+            [snake_game.sense_food(adj[dir]) for dir in straight_directions]
 
-                              snake_game.sense_food(adj["up"]),
-                              snake_game.sense_food(adj["down"]),
-                              snake_game.sense_food(adj["left"]),
-                              snake_game.sense_food(adj["right"])]
+        local_diagonal = [snake_game.obstacle_check(adj[direction]) for direction in diagonal_directions] + \
+            [snake_game.sense_food(adj[direction])
+             for direction in diagonal_directions]
 
-        local_straight = [snake_game.obstacle_check(adj[direction]) for direction in straight_directions] + [
-            snake_game.sense_food(adj[direction]) for direction in straight_directions]
+        global_straight = [snake_game.distance_to_wall(direction) for direction in straight_directions] + \
+            [snake_game.distance_to_tail(direction) for direction in straight_directions] + \
+            [snake_game.distance_to_food(direction)
+             for direction in straight_directions]
 
-        if not local_straight_old == local_straight:
-            print("INCORRECT FOR LOCAL STRAIGHT")
-            return
+        global_diagonal = [snake_game.distance_to_wall(direction) for direction in diagonal_directions] + \
+            [snake_game.distance_to_tail(direction) for direction in diagonal_directions] + \
+            [snake_game.distance_to_food(direction)
+             for direction in diagonal_directions]
 
-        local_diagonal_old = [snake_game.obstacle_check(adj["upleft"]),
-                              snake_game.obstacle_check(adj["downleft"]),
-                              snake_game.obstacle_check(adj["upright"]),
-                              snake_game.obstacle_check(adj["downright"]),
-
-                              snake_game.sense_food(adj["upleft"]),
-                              snake_game.sense_food(adj["downleft"]),
-                              snake_game.sense_food(adj["upright"]),
-                              snake_game.sense_food(adj["downright"])]
-
-        local_diagonal = [snake_game.obstacle_check(adj[direction]) for direction in diagonal_directions] + [
-            snake_game.sense_food(adj[direction]) for direction in diagonal_directions]
-
-        if not local_diagonal_old == local_diagonal:
-            print("INCORRECT FOR LOCAL DIAGONAL")
-            return
-
-        food_direction = [snake_game.food_direction("x"),
-                          snake_game.food_direction("y")]
-
-        global_straight = [snake_game.distance_to_wall(direction) for direction in straight_directions] + [snake_game.distance_to_tail(
-            direction) for direction in straight_directions] + [snake_game.distance_to_food(direction) for direction in straight_directions]
-
-        global_diagonal = [snake_game.distance_to_wall(direction) for direction in diagonal_directions] + [snake_game.distance_to_tail(direction) for direction in diagonal_directions] + [snake_game.distance_to_food(direction)
-                                                                                                                                                                                           for direction in diagonal_directions]
-
-        global_straight_old = [snake_game.distance_to_wall("up"),
-                               snake_game.distance_to_wall("down"),
-                               snake_game.distance_to_wall("left"),
-                               snake_game.distance_to_wall("right"),
-
-                               snake_game.distance_to_tail("up"),
-                               snake_game.distance_to_tail("down"),
-                               snake_game.distance_to_tail("left"),
-                               snake_game.distance_to_tail("right"),
-
-                               snake_game.distance_to_food("up"),
-                               snake_game.distance_to_food("down"),
-                               snake_game.distance_to_food("left"),
-                               snake_game.distance_to_food("right"),
-                               ]
-        if not global_straight_old == global_straight:
-            print("INCORRECT FOR global straight")
-            return
-
-        global_diagonal_old = [snake_game.distance_to_wall("upleft"),
-                               snake_game.distance_to_wall("downleft"),
-                               snake_game.distance_to_wall("upright"),
-                               snake_game.distance_to_wall("downright"),
-
-                               snake_game.distance_to_tail("upleft"),
-                               snake_game.distance_to_tail("downleft"),
-                               snake_game.distance_to_tail("upright"),
-                               snake_game.distance_to_tail("downright"),
-
-                               snake_game.distance_to_food("upleft"),
-                               snake_game.distance_to_food("downleft"),
-                               snake_game.distance_to_food("upright"),
-                               snake_game.distance_to_food("downright"),
-                               ]
-        if not global_diagonal_old == global_diagonal:
-            print("INCORRECT FOR global diagonal")
-            return
+        food_direction = [snake_game.food_direction(
+            "x"), snake_game.food_direction("y")]
 
         # Gets softmax output of the neural network decision
         if algorithm == "a":
@@ -324,9 +273,9 @@ def run_game(display, snake_game, headless, network, algorithm):
                 global_straight + global_diagonal + food_direction)
 
         # Converts softmax output to output direction and sets it
-        directions = ["up", "down", "left", "right"]
+        possible_directions = ["up", "down", "left", "right"]
         direction = np.argmax(decision)
-        snake_game.snake_direction = directions[direction]
+        snake_game.snake_direction = possible_directions[direction]
 
         snake_game.update_snake_position()
 

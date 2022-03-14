@@ -6,10 +6,14 @@ import numpy as np
 
 
 def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp, exp_type, plot_std=False, stds=None):
+    '''Plots a line graph of fitness against generation. This can be either mean or max depending on the data 
+        provided.'''
     ax.set_xlabel('Generations')
     ax.set_ylabel('Average of ' + graph_type.capitalize() +
                   ' Fitness over ' + str(iteration_num) + ' iterations')
+
     for i in range(len(data)):
+        # Manually sets colour for final experiments so it matches exploration graph colour
         if exp == Experiment.CXINDPB and exp_type == ExperimentType.FINAL:
             colour = "#9701FF" if i == 1 else "#00C5FF"
         elif exp == Experiment.INPUT and exp_type == ExperimentType.FINAL:
@@ -29,6 +33,7 @@ def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp
 
 
 def box_plot(ax, input, colour_map, exp, exp_type):
+    '''Plots a box plot of the distribution of average fitness from the final generation of each iteration'''
     labels = [algorithm[0] for algorithm in input]
     data = [algorithm[1] for algorithm in input]
     ax.set_xlabel('Algorithm Parameters')
@@ -37,6 +42,7 @@ def box_plot(ax, input, colour_map, exp, exp_type):
     box_plots = ax.boxplot(data, patch_artist=True, labels=labels)
 
     for i, plot in enumerate(box_plots['boxes']):
+        # Manually sets colour for final experiments so it matches exploration box plot colour
         if exp == Experiment.CXINDPB and exp_type == ExperimentType.FINAL:
             colour = "#9701FF" if i == 1 else "#00C5FF"
         elif exp == Experiment.INPUT and exp_type == ExperimentType.FINAL:
@@ -50,6 +56,7 @@ def box_plot(ax, input, colour_map, exp, exp_type):
 
 
 def initialise_graphs():
+    '''Initializes the subplots for the experiment'''
     fig = plt.figure(figsize=(14, 10), dpi=80)
     ax1 = plt.subplot(221)
     ax2 = plt.subplot(222, sharey=ax1)
@@ -62,6 +69,9 @@ def initialise_graphs():
 
 
 def plot_experiment(exp, exp_type, plot_std=False):
+    '''Loads the saved data for a given experiment and experiment type and plots a line graph of the mean and maximum 
+    fitness over the generations, and a box plot of the distribution of average fitness from the final generation 
+    of each iteration '''
     if exp_type == ExperimentType.EXPLORATION:
         iteration_num = 5
     elif exp_type == ExperimentType.FINAL:
@@ -72,9 +82,11 @@ def plot_experiment(exp, exp_type, plot_std=False):
     fig, ax1, ax2, ax3 = initialise_graphs()
 
     if exp == Experiment.CXINDPB:
-        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different mutation and crossover probabilities on fitness over 150 generations"
+        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different mutation and \
+                        crossover probabilities on fitness over 150 generations"
     elif exp == Experiment.INPUT:
-        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different neural network inputs on fitness over 150 generations"
+        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different neural network inputs on \
+            fitness over 150 generations"
     elif exp == Experiment.FINAL_ALGORITHM:
         suptitle = "Final algorithm's fitnessees over 250 generations"
 
@@ -92,6 +104,7 @@ def plot_experiment(exp, exp_type, plot_std=False):
         alterations = [folder for folder in os.listdir(
             save_location) if os.path.isdir(save_location + "//" + folder)]
     else:
+        # Slight hack to only ensure the folder is checked + plotted once
         alterations = range(1)
 
     for alteration in alterations:
@@ -112,6 +125,7 @@ def plot_experiment(exp, exp_type, plot_std=False):
             stds.append(logbook.select("std"))
             final_averages.append(logbook.select("mean")[-1])
 
+        # Averages the stats over the iterations
         label = iterations[0][0]
         averaged_means.append((label, np.mean(means, axis=0)))
         averaged_maxes.append((label, np.mean(maxes, axis=0)))
@@ -131,6 +145,7 @@ def plot_experiment(exp, exp_type, plot_std=False):
     box_plot(ax3, final_generation_averages,
              plt.get_cmap("gist_rainbow"), exp, exp_type)
 
+    # Saves graphs to file
     if exp != Experiment.FINAL_ALGORITHM:
         plt.savefig(save_location +
                     f"//{exp.value}-{exp_type.value}-graphs.png")

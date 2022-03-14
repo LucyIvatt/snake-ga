@@ -21,6 +21,7 @@ def evaluate(individual, network, snake_game, algorithm, display, headless):
 
 def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=150, pop_num=1500, mut_prob=0.021, cx_prob=0.15,
                       exp=Experiment.TEST, exp_type=ExperimentType.FINAL, algorithm="b"):
+    '''Runs the genetic algorithm with the provided parameters and saved the logbook & final population to disk'''
     # Creates single objective maximizing fitness named FitnessMax
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
@@ -105,6 +106,7 @@ def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=
 
 
 def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx, exp, exp_type, algorithm):
+    '''Saves the logbook and population to disk, along with a label to be used when plotting the graphs'''
     if exp == Experiment.FINAL_ALGORITHM:
         root_folder = "sim-outputs//final-algorithm"
     elif exp == Experiment.TEST:
@@ -160,6 +162,7 @@ def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx,
 
 
 def load_simulation_info(load_loc):
+    '''Loads the pickled simulation info from the disk and returns it in a tuple containing the label, logbook and final population'''
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMax)
     output = []
