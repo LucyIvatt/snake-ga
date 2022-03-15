@@ -11,10 +11,9 @@ import pickle
 
 
 def evaluate(individual, network, snake_game, algorithm, display, headless):
-    '''Returns the fitness of the individual after evaluating performance from game simulation'''
+    '''Returns the fitness of the individual after receiving the score from the game simulation'''
     network.setWeightsLinear(
         individual)   # Load the individual's weights into the neural network
-    # Evaluate the individual by running the game (discuss)
     score = run_game(display, snake_game, headless, network, algorithm)
     return score,
 
@@ -97,6 +96,7 @@ def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=
 
         # Compiles & records the statistics for the new generation
         record = stats.compile(population)
+        print(record)
         logbook.record(gen=g, **record)
 
     save_simulation_info(logbook, population, gen_num,
