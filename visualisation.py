@@ -3,10 +3,11 @@ import os
 from enums import Experiment, ExperimentType
 from genetic import load_simulation_info
 import numpy as np
+import pickle
 
 
 def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp, exp_type, plot_std=False, stds=None):
-    '''Plots a line graph of fitness against generation. This can be either mean or max depending on the data 
+    '''Plots a line graph of fitness against generation. This can be either mean or max depending on the data
         provided.'''
     ax.set_xlabel('Generations')
     ax.set_ylabel('Average of ' + graph_type.capitalize() +
@@ -65,32 +66,21 @@ def initialise_graphs():
     fig.tight_layout()
     plt.subplots_adjust(left=0.125, bottom=0.1, right=0.9,
                         top=0.9, wspace=0.1, hspace=0.1)
-    return fig, ax1, ax2, ax3
+    return ax1, ax2, ax3
 
 
 def plot_experiment(exp, exp_type, plot_std=False):
-    '''Loads the saved data for a given experiment and experiment type and plots a line graph of the mean and maximum 
-    fitness over the generations, and a box plot of the distribution of average fitness from the final generation 
+    '''Loads the saved data for a given experiment and experiment type and plots a line graph of the mean and maximum
+    fitness over the generations, and a box plot of the distribution of average fitness from the final generation
     of each iteration '''
     if exp_type == ExperimentType.EXPLORATION:
         iteration_num = 5
     elif exp_type == ExperimentType.FINAL:
         iteration_num = 15
     elif exp_type == ExperimentType.FINAL_ALGORITHM:
-        iteration_num = 20
+        iteration_num = 10
 
-    fig, ax1, ax2, ax3 = initialise_graphs()
-
-    if exp == Experiment.CXINDPB:
-        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different mutation and \
-                        crossover probabilities on fitness over 150 generations"
-    elif exp == Experiment.INPUT:
-        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different neural network inputs on \
-            fitness over 150 generations"
-    elif exp == Experiment.FINAL_ALGORITHM:
-        suptitle = "Final algorithm's fitnessees over 200 generations"
-
-    fig.suptitle(suptitle)
+    ax1, ax2, ax3 = initialise_graphs()
 
     if exp != Experiment.FINAL_ALGORITHM:
         save_location = f"sim-outputs//{exp.value}-{exp_type.value}-experiment"
@@ -131,6 +121,12 @@ def plot_experiment(exp, exp_type, plot_std=False):
         averaged_maxes.append((label, np.mean(maxes, axis=0)))
         averaged_stds.append((label, np.mean(stds, axis=0)))
         final_generation_averages.append((label, final_averages))
+
+    if exp != Experiment.FINAL_ALGORITHM:
+        final_generation_file = open(
+            save_location + "//" + "final_generation_averages" + ".pkl", "wb")
+        pickle.dump(final_generation_averages, final_generation_file)
+        final_generation_file.close()
 
     ax1.title.set_text("Mean fitness over all generations")
     graph_plot(ax1, logbooks[0].select("gen"), averaged_means, plt.get_cmap(
