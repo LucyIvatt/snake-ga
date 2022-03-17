@@ -16,7 +16,7 @@ def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp
     for i in range(len(data)):
         # Manually sets colour for final experiments so it matches exploration graph colour
         if exp == Experiment.CXINDPB and exp_type == ExperimentType.FINAL:
-            colour = "#9701FF" if i == 1 else "#00C5FF"
+            colour = "#c883f7" if i == 1 else "#00C5FF"
         elif exp == Experiment.INPUT and exp_type == ExperimentType.FINAL:
             colour = "#20FF00" if i == 1 else "#FFAD54"
         elif exp == Experiment.FINAL_ALGORITHM:
@@ -30,7 +30,8 @@ def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp
             ax.fill_between(
                 gen, (data[i][1]+stds[i][1]), (data[i][1]-stds[i][1]), color=colour, alpha=.1)
 
-    ax.legend(loc='best', fancybox=True, framealpha=0.5)
+    if graph_type == "mean":
+        ax.legend(loc='best', fancybox=True, framealpha=0.5)
 
 
 def box_plot(ax, input, colour_map, exp, exp_type):
@@ -39,13 +40,16 @@ def box_plot(ax, input, colour_map, exp, exp_type):
     data = [algorithm[1] for algorithm in input]
     ax.set_xlabel('Algorithm Parameters')
     ax.set_ylabel('Fitness')
-    labels = [label[:11] + "\n" + label[12:] for label in labels]
-    box_plots = ax.boxplot(data, patch_artist=True, labels=labels)
+    if exp == Experiment.CXINDPB:
+        labels = [label[:5] + "\n" + label[6:11] + "\n" +
+                  label[12:18] + "\n" + label[19:] for label in labels]
+    box_plots = ax.boxplot(data, patch_artist=True,
+                           labels=labels, medianprops={"color": "black", "linewidth": 6})
 
     for i, plot in enumerate(box_plots['boxes']):
         # Manually sets colour for final experiments so it matches exploration box plot colour
         if exp == Experiment.CXINDPB and exp_type == ExperimentType.FINAL:
-            colour = "#9701FF" if i == 1 else "#00C5FF"
+            colour = "#c883f7" if i == 1 else "#00C5FF"
         elif exp == Experiment.INPUT and exp_type == ExperimentType.FINAL:
             colour = "#20FF00" if i == 1 else "#FFAD54"
         elif exp == Experiment.FINAL_ALGORITHM:
@@ -64,9 +68,7 @@ def initialise_graphs():
     ax3 = plt.subplot(212)
     fig.set_size_inches(30, 20)
     plt.subplots_adjust(left=0.125, bottom=0.1, right=0.9,
-                        top=0.9, wspace=0.1, hspace=0.1)
-    plt.rcParams.update({'font.size': 16})
-    fig.tight_layout()
+                        top=0.9, wspace=0.1, hspace=0.2)
     return ax1, ax2, ax3
 
 
@@ -145,6 +147,6 @@ def plot_experiment(exp, exp_type, plot_std=False):
     # Saves graphs to file
     if exp != Experiment.FINAL_ALGORITHM:
         plt.savefig(save_location +
-                    f"//{exp.value}-{exp_type.value}-graphs.png")
+                    f"//{exp.value}-{exp_type.value}-graphs.png", dpi=300)
     else:
         plt.savefig(save_location + f"//{exp.value}-graphs.png")

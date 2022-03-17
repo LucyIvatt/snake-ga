@@ -65,7 +65,7 @@ def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=
 
     # Genetic Algorithm
     for g in range(gen_num):
-        logging.debug("Running generation " + str(g))
+        logging.info(f"Running generation {g+1}/{gen_num}")
 
         # Selects number of individuals equal to population length
         offspring = toolbox.select(population, len(population))
@@ -96,11 +96,11 @@ def genetic_algorithm(ind_size, network, snake_game, display, headless, gen_num=
 
         # Compiles & records the statistics for the new generation
         record = stats.compile(population)
-        print(record)
         logbook.record(gen=g, **record)
 
-    save_simulation_info(logbook, population, gen_num,
-                         pop_num, mut_prob, cx_prob, exp, exp_type, algorithm)
+    if exp != Experiment.TEST:
+        save_simulation_info(logbook, population, gen_num,
+                             pop_num, mut_prob, cx_prob, exp, exp_type, algorithm)
 
     return logbook, population
 
@@ -109,8 +109,6 @@ def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx,
     '''Saves the logbook and population to disk, along with a label to be used when plotting the graphs'''
     if exp == Experiment.FINAL_ALGORITHM:
         root_folder = "sim-outputs//final-algorithm"
-    elif exp == Experiment.TEST:
-        root_folder = "sim-outputs//tests"
     else:
         root_folder = "sim-outputs//" + exp.value + "-" + exp_type.value + "-experiment"
     if not os.path.exists(root_folder):
@@ -122,7 +120,7 @@ def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx,
     elif exp == Experiment.INPUT:
         parent_folder = root_folder + "//" + "gens-" + \
             str(gen_num) + "-pop-" + str(pop_num) + "-algorithm-" + algorithm
-    elif exp == Experiment.FINAL_ALGORITHM or exp == Experiment.TEST:
+    elif exp == Experiment.FINAL_ALGORITHM:
         parent_folder = root_folder
 
     if not os.path.exists(parent_folder):
@@ -149,9 +147,6 @@ def save_simulation_info(logbook, final_population, gen_num, pop_num, indpb, cx,
         pickle.dump("algorithm-" + algorithm, label_file)
     elif exp == Experiment.FINAL_ALGORITHM:
         pickle.dump("algorithm-b", label_file)
-    elif exp == Experiment.TEST:
-        pickle.dump("algorithm-" + algorithm + "-indpb-" + "{:.3f}".format(indpb) +
-                    "-cxprob-" + "{:.3f}".format(cx), label_file)
 
     pickle.dump(logbook, lb_file)
     pickle.dump(final_population, pop_file)
