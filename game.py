@@ -304,7 +304,7 @@ def run_game(display, snake_game, headless, network, algorithm):
             display.update_segment_positions(snake_game.snake)
             display.win.update()
 
-            time.sleep(0.1)     # Change to change update rate of the game
+            time.sleep(0.001)     # Change to change update rate of the game
 
     if not headless:
         turtle.done()

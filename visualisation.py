@@ -3,10 +3,11 @@ import os
 from enums import Experiment, ExperimentType
 from genetic import load_simulation_info
 import numpy as np
+import pickle
 
 
 def graph_plot(ax, generations, data, colour_map, graph_type, iteration_num, exp, exp_type, plot_std=False, stds=None):
-    '''Plots a line graph of fitness against generation. This can be either mean or max depending on the data 
+    '''Plots a line graph of fitness against generation. This can be either mean or max depending on the data
         provided.'''
     ax.set_xlabel('Generations')
     ax.set_ylabel('Average of ' + graph_type.capitalize() +
@@ -70,15 +71,15 @@ def initialise_graphs():
 
 
 def plot_experiment(exp, exp_type, plot_std=False):
-    '''Loads the saved data for a given experiment and experiment type and plots a line graph of the mean and maximum 
-    fitness over the generations, and a box plot of the distribution of average fitness from the final generation 
+    '''Loads the saved data for a given experiment and experiment type and plots a line graph of the mean and maximum
+    fitness over the generations, and a box plot of the distribution of average fitness from the final generation
     of each iteration '''
     if exp_type == ExperimentType.EXPLORATION:
         iteration_num = 5
     elif exp_type == ExperimentType.FINAL:
         iteration_num = 15
     elif exp_type == ExperimentType.FINAL_ALGORITHM:
-        iteration_num = 20
+        iteration_num = 10
 
     ax1, ax2, ax3 = initialise_graphs()
 
@@ -121,6 +122,12 @@ def plot_experiment(exp, exp_type, plot_std=False):
         averaged_maxes.append((label, np.mean(maxes, axis=0)))
         averaged_stds.append((label, np.mean(stds, axis=0)))
         final_generation_averages.append((label, final_averages))
+
+    if exp != Experiment.FINAL_ALGORITHM:
+        final_generation_file = open(
+            save_location + "//" + "final_generation_averages" + ".pkl", "wb")
+        pickle.dump(final_generation_averages, final_generation_file)
+        final_generation_file.close()
 
     ax1.title.set_text("Mean fitness over all generations")
     graph_plot(ax1, logbooks[0].select("gen"), averaged_means, plt.get_cmap(
