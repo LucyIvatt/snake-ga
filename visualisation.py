@@ -62,10 +62,11 @@ def initialise_graphs():
     ax2 = plt.subplot(222, sharey=ax1)
     ax3 = plt.subplot(212)
     fig.set_size_inches(30, 20)
-    fig.tight_layout()
     plt.subplots_adjust(left=0.125, bottom=0.1, right=0.9,
                         top=0.9, wspace=0.1, hspace=0.1)
-    return fig, ax1, ax2, ax3
+    plt.rcParams.update({'font.size': 16})
+    fig.tight_layout()
+    return ax1, ax2, ax3
 
 
 def plot_experiment(exp, exp_type, plot_std=False):
@@ -79,18 +80,7 @@ def plot_experiment(exp, exp_type, plot_std=False):
     elif exp_type == ExperimentType.FINAL_ALGORITHM:
         iteration_num = 20
 
-    fig, ax1, ax2, ax3 = initialise_graphs()
-
-    if exp == Experiment.CXINDPB:
-        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different mutation and \
-                        crossover probabilities on fitness over 150 generations"
-    elif exp == Experiment.INPUT:
-        suptitle = f"{exp_type.value.capitalize()} experiment showing the effect of different neural network inputs on \
-            fitness over 150 generations"
-    elif exp == Experiment.FINAL_ALGORITHM:
-        suptitle = "Final algorithm's fitnessees over 200 generations"
-
-    fig.suptitle(suptitle)
+    ax1, ax2, ax3 = initialise_graphs()
 
     if exp != Experiment.FINAL_ALGORITHM:
         save_location = f"sim-outputs//{exp.value}-{exp_type.value}-experiment"
