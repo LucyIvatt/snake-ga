@@ -4,34 +4,49 @@
 ![Matplotlib](https://img.shields.io/badge/Matplotlib-%23ffffff.svg?style=for-the-badge&logo=Matplotlib&logoColor=black)
 ![SciPy](https://img.shields.io/badge/SciPy-%230C55A5.svg?style=for-the-badge&logo=scipy&logoColor=%white)
 
-This repository contains a basic neuroevolution that evolves the weights of a multi-layer perceptron (MLP) using a genetic algorithm.
-https://deap.readthedocs.io/en/master/
+This repository contains a basic neuroevolution that evolves the weights of a multi-layer perceptron (MLP) using a genetic algorithm. This solution utilises [DEAP](https://deap.readthedocs.io/en/master/), a novel evolutionary computation framework for rapid prototyping and testing of ideas.
 
 ## Neural Network Structure
 The final algorithm proposed is a conventional neuroevolutionary algorithm (CNE). The
 topology of the network is fixed in nature and only the weights of the network are evolved
-in the algorithm. The network used is a fully-connected multi-layer perceptron with 2
+in the algorithm. 
+
+The network used is a fully-connected multi-layer perceptron with 2
 hidden layers. The input layer has 10 nodes that represent local searches for food &
 obstacles in the cells immediately above, below, left, and right of the snake, as well as the
 direction of the food in the x & y axis
 
-![thumbnail](https://github.com/user-attachments/assets/babe43b6-a449-4dfa-ba93-aff71015d6c8)
-
-## Individual Representation
-
-![thumbnail (1)](https://github.com/user-attachments/assets/08e7bf06-44a5-4bd1-99bf-06ab36901cb2)
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/a4d6eefb-f137-477d-8474-90aea13c0da5">
 
 ## Experiments
 
-![sensing_function_diagram](https://github.com/user-attachments/assets/937edd13-8640-481a-b6d6-72952a9bb8d0)
+Before deciding on the final algorithm two different experiments were run to determine the most successful variants of the
+algorithm. One experiment looked at different combinations of inputs to the neural network,
+and the other looked at modifying the probabilities of crossover and mutation. 
 
+Due to the stochastic nature of genetic algorithms, each algorithm variant was run multiple times and
+the statistics averaged. This produced more rigorous results so that reliable and informed
+decisions could be made. Each experiment had 2 stages, the exploration stage, and a final
+stage. The exploration stage used 5 iterations of each algorithm to explore a wide range of
+alterations. The final stage used 15 iterations of each algorithm to analyse the best two
+variants found in the exploration stage.
 
-### Results
+### Neural Network Input Experiment
+#### Algorithms Tested
 
-![cx-indpb-exploration-graphs](https://github.com/user-attachments/assets/948358a2-833b-4c6a-8c6f-92137bb31732)
-![cx-indpb-final-graphs](https://github.com/user-attachments/assets/5a3790eb-3c19-4144-8032-0fae7b7f5d77)
-![final-algorithm-graphs](https://github.com/user-attachments/assets/54b2e745-0a42-42bd-a9c8-ee12955e0d7f)
-![input-exploration-graphs](https://github.com/user-attachments/assets/352272f4-5a68-4f3b-a5b7-ef11307a57c7)
-![input-final-graphs](https://github.com/user-attachments/assets/4078a2dd-6cd2-4900-b145-4d643087640a)
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/eefb66c4-6108-43da-807a-4c89915027e4">
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/c65842b4-c4df-4875-bd39-fcdd37306015">
+
+#### Results
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/1a65a7f6-0128-474e-b2a8-cedd1c60fb38">
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/4508c6b2-9c02-4998-aa07-85191453b7e7">
+
+### Crossover & Mutation Probabilities Results
+
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/0e485f6d-765e-4bd9-9913-c0e54221dbf9">
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/e8cd087b-c3a1-4ef3-aa0c-6926faa3c57e">
+
+### Final Algorithm
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/6daa3250-bf80-4952-b4cf-915bf880b4d5">
 
 _All code submitted as part of the first assessment in the module Evolutionary and Adaptive Computing (EVAC) at the University of York._
